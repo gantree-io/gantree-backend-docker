@@ -1,0 +1,60 @@
+
+# Base alpine image with node and npm preinstalled
+FROM node:lts-alpine3.11
+
+# Add docker-compose-wait tool
+ENV WAIT_VERSION 2.7.2
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
+
+# Get packages
+RUN apk update && \
+    apk add --update curl jq bash ca-certificates git openssl \
+    unzip wget build-base jpeg-dev zlib-dev libffi-dev \
+    openssl-dev git openssh-client sshpass python3 python3-dev
+
+# alias python3 as python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Install pm2
+RUN npm install -g pm2
+
+# Install ansible
+RUN pip3 install --upgrade pip
+ENV LIBRARY_PATH=/lib:/usr/lib
+WORKDIR /ansible
+VOLUME [ "/ansible" ]
+ARG ANSIBLE_VERSION=2.9
+RUN pip install ansible==$ANSIBLE_VERSION
+WORKDIR /home
+
+# Setup python requirements
+COPY ./python_requirements.txt python_requirements.txt
+RUN pip3 install -r ./python_requirements.txt
+
+# Setup ansible role requirements
+#RUN ansible-galaxy install \
+#    -p /usr/share/ansible/roles \
+#    -r /usr/local/lib/node_modules/gantree-cli/node_modules/gantree-lib/ansible/requirements/requirements.yml
+
+ARG GANTREE_BACKEND_REPO=https://github.com/flex-dapps/gantree-backend.git
+RUN git clone --depth=1 --branch=master $GANTREE_BACKEND_REPO /app
+RUN yarn --cwd /app
+
+COPY ./process_backend.yml process.yml
+
+# Start ssh-agent
+RUN eval $(ssh-agent)
+#RUN eval `ssh-agent -s`
+
+#COPY ./ansible.cfg ansible.cfg
+COPY ./env/backend /app/.env
+#ENV ANSIBLE_CONFIG=ansible.cfg
+
+# Setup entrypoint script
+# See https://serverfault.com/a/940706 for why we can't chmod this in the dockerfile
+#COPY ./entrypoint.sh entrypoint.sh
+
+# Run gantree-cli
+#ENTRYPOINT ["./entrypoint.sh"]
+CMD ["pm2-runtime", "process_backend.yml"]

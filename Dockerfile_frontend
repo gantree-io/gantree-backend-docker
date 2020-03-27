@@ -1,0 +1,30 @@
+
+# Base alpine image with node and npm preinstalled
+FROM node:lts-alpine3.11
+
+# Get packages
+RUN apk update && \
+    apk add --update curl jq bash ca-certificates git openssl \
+    unzip wget build-base jpeg-dev zlib-dev libffi-dev \
+    openssl-dev git openssh-client sshpass python3 python3-dev
+
+# Add docker-compose-wait tool
+ENV WAIT_VERSION 2.7.2
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
+
+# Install git
+RUN apk update && apk add --update git
+
+# Pull frontend repo
+ARG GANTREE_FRONTEND_REPO=https://github.com/flex-dapps/gantree-frontend.git
+RUN git clone --depth=1 --branch=master $GANTREE_FRONTEND_REPO /frontend
+RUN yarn --cwd /frontend
+RUN yarn --cwd /frontend build
+
+RUN npm install -g sirv-cli
+
+COPY ./env/frontend /frontend/.env
+
+# Run
+CMD ["yarn", "--cwd", "/frontend", "dev"]
