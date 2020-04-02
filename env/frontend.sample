@@ -1,9 +1,6 @@
-# Replace values and rename file to '/env/frontend'
 
-MODE=dev
-
-GRAPHQL_URL=http://localhost:4000/graphql
-SOCKETIO_URL=http://localhost:3000
+# Replace these values and rename file to '/env/frontend'
+# Then do:  docker-compose build
 
 FIREBASE_APIKEY={REPLACE_ME}
 FIREBASE_AUTHDOMAIN={REPLACE_ME}
@@ -12,3 +9,9 @@ FIREBASE_PROJECTID={REPLACE_ME}
 FIREBASE_STORAGEBUCKET={REPLACE_ME}
 FIREBASE_MESSAGINGSENDERID={REPLACE_ME}
 FIREBASE_APPID={REPLACE_ME}
+
+# Don't replace these values for the moment please
+
+GRAPHQL_URL=http://localhost:4000/graphql
+SOCKETIO_URL=http://localhost:3000
+MODE=dev

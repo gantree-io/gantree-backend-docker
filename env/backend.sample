@@ -1,15 +1,8 @@
-# Replace values and rename file to '/env/backend'
 
-GRAPHQL_PORT=4000
-SOCKETIO_PORT=3000
-MONGODB_URL=mongodb://localhost:27017/gantree
-APP_URL=http://localhost:5000
+# Replace these values and rename file to '/env/frontend'
+# Then do:  docker-compose build
 
 SECRET_KEY=1234567890abcdefghijklmnopqustuvwxyz
-TEAMSTORAGE_ROOT=.
-MOCK_CLI=false
-LOGGING_ON=true
-
 EMAILER_ENV=ethereal
 EMAILER_HOST=smtp.ethereal.email
 EMAILER_PORT=587
@@ -24,3 +17,9 @@ FIREBASE_PROJECTID={REPLACE_ME}
 FIREBASE_STORAGEBUCKET={REPLACE_ME}
 FIREBASE_MESSAGINGSENDERID={REPLACE_ME}
 FIREBASE_APPID={REPLACE_ME}
+
+# You probably don't need to change these, but you can
+
+LOGGING_ON=true
+MOCK_CLI=false
+

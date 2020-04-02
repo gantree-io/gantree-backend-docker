@@ -3,14 +3,21 @@ services:
   volumes-provisioner:
     image: hasnat/volumes-provisioner
     environment:
-      PROVISION_DIRECTORIES: "${USER_ID}:${USER_ID}:0777:/files;${USER_ID}:${USER_ID}:0777:/mongo_db;${USER_ID}:${USER_ID}:0777:/mongo_log;${USER_ID}:${USER_ID}:0777:/app_log;${USER_ID}:${USER_ID}:0777:/fe_log"
+      PROVISION_DIRECTORIES: >-
+        ${USER_ID}:${USER_ID}:0777:/files;
+        ${USER_ID}:${USER_ID}:0777:/mongo_db;
+        ${USER_ID}:${USER_ID}:0777:/be_teams;
+        ${USER_ID}:${USER_ID}:0777:/be_inventory;
+        ${USER_ID}:${USER_ID}:0777:/be_control"
     volumes:
       - "./files:/files"
       - "./files/mongo_db:/mongo_db"
-      - "./files/mongo_log:/mongo_log"
-      - "./files/app_log:/app_log"
-      - "./files/fe_log:/fe_log"
+      - "./files/backend_log:/be_log"
+      - "./files/backend_teams:/be_teams"
+      - "./files/backend_inventory:/be_inventory"
+      - "./files/backend_control:/be_control"
     network_mode: none
+    command: sh -c "mkdir /mongo_log/loggo"
   database:
     depends_on:
       - volumes-provisioner
@@ -18,10 +25,9 @@ services:
     restart: always
     volumes:
       - "./files/mongo_db:/db"
-      - "./files/mongo_log:/log"
     ports:
       - "27017:27017"
-    command: --logpath=/log/mongo.log --dbpath=/db #--auth
+    command: --dbpath=/db #--auth
     network_mode: host
   backend:
     depends_on:
@@ -30,6 +36,8 @@ services:
       context: ./
       dockerfile: ./Dockerfile_backend
     restart: always
+    environment:
+      - GANTREE_OVERRIDE_INVENTORY_PATH=/inventory
     env_file:
       - ./env/backend
     ports:
@@ -37,9 +45,17 @@ services:
       - "4000:4000"
     environment:
       WAIT_HOSTS: localhost:27017
+      GRAPHQL_PORT: "4000"
+      SOCKETIO_PORT: "3000"
+      MONGODB_URL: mongodb://localhost:27017/gantree
+      APP_URL: http://localhost:5000
+      TEAMSTORAGE_ROOT: /teams
     volumes:
-      - "./files/app_log:/app_log"
-    command: sh -c "/wait && eval `ssh-agent -s` && pm2-runtime process.yml"
+      - "./files/backend_log:/log"
+      - "./files/backend_teams:/teams"
+      - "./files/backend_inventory:/inventory"
+      - "./files/backend_control:/control"
+    command: sh -c "eval `ssh-agent -s` && pm2 start process.yml && tail -f /dev/null"
     network_mode: host
   frontend:
     depends_on:
@@ -52,7 +68,7 @@ services:
       - "443:443"
     environment:
       WAIT_HOSTS: localhost:3000, localhost:4000
-    volumes:
-      - "./files/fe_log:/fe_log"
     network_mode: host
-    command: sh -c "/wait && cd /frontend && yarn dev"
+    working_dir: /frontend
+    #command: yarn dev
+    command: sh -c "/wait && yarn dev"

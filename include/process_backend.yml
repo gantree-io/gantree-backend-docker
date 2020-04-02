@@ -1,0 +1,7 @@
+---
+apps:
+  - script: /app/server.js
+    name: gantree-backend
+    log_file: /log/backend.log
+    out_file: /log/backend_out.log
+    error_file: /log/backend_err.log

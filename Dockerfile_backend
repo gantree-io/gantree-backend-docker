@@ -29,32 +29,43 @@ RUN pip install ansible==$ANSIBLE_VERSION
 WORKDIR /home
 
 # Setup python requirements
-COPY ./python_requirements.txt python_requirements.txt
-RUN pip3 install -r ./python_requirements.txt
-
-# Setup ansible role requirements
-#RUN ansible-galaxy install \
-#    -p /usr/share/ansible/roles \
-#    -r /usr/local/lib/node_modules/gantree-cli/node_modules/gantree-lib/ansible/requirements/requirements.yml
+COPY ./include/python_requirements.txt python_requirements.txt
+RUN pip3 install -r python_requirements.txt
 
 ARG GANTREE_BACKEND_REPO=https://github.com/flex-dapps/gantree-backend.git
-RUN git clone --depth=1 --branch=master $GANTREE_BACKEND_REPO /app
+ARG GANTREE_BACKEND_COMMIT=16ee1e8346f0e7176e1dd2e7462e420b8ac2d017
+RUN git clone $GANTREE_BACKEND_REPO /app
+RUN git -C /app checkout $GANTREE_BACKEND_COMMIT
 RUN yarn --cwd /app
 
-COPY ./process_backend.yml process.yml
+# Setup ansible role requirements
+COPY ./include/ansible_requirements.yml ansible_requirements.yml
+RUN ansible-galaxy install \
+    -p /usr/share/ansible/roles \
+    -r ansible_requirements.yml
 
-# Start ssh-agent
-RUN eval $(ssh-agent)
-#RUN eval `ssh-agent -s`
+# Start ssh-agent, TODO(ryan): remove this once ssh-add is removed from CLI/Lib
+RUN eval `ssh-agent -s`
 
-#COPY ./ansible.cfg ansible.cfg
+# Setup inventory path
+RUN mkdir /inventory
+RUN chmod 0777 /inventory
+ENV GANTREE_OVERRIDE_INVENTORY_PATH=/inventory
+
+# Setup host control path
+RUN mkdir /control
+RUN chmod 0777 /control
+ENV GANTREE_CONTROL_PATH=/control
+
+# Copy backend process file
+COPY ./include/process_backend.yml process.yml
+
+# Copy backend env file
 COPY ./env/backend /app/.env
-#ENV ANSIBLE_CONFIG=ansible.cfg
 
-# Setup entrypoint script
-# See https://serverfault.com/a/940706 for why we can't chmod this in the dockerfile
-#COPY ./entrypoint.sh entrypoint.sh
+# Setup ansible config file
+COPY ./include/ansible.cfg ansible.cfg
+ENV ANSIBLE_CONFIG=ansible.cfg
 
 # Run gantree-cli
-#ENTRYPOINT ["./entrypoint.sh"]
-CMD ["pm2-runtime", "process_backend.yml"]
+CMD ["pm2-runtime", "process.yml"]

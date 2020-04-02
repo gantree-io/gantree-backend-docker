@@ -1,5 +1,0 @@
----
-apps:
-  - script: /app/server.js
-    name: gantree-server
-    out_file: /log/pm2.log
