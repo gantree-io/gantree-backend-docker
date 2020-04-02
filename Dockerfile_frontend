@@ -18,7 +18,9 @@ RUN apk update && apk add --update git
 
 # Pull frontend repo
 ARG GANTREE_FRONTEND_REPO=https://github.com/flex-dapps/gantree-frontend.git
-RUN git clone --depth=1 --branch=master $GANTREE_FRONTEND_REPO /frontend
+ARG GANTREE_FRONTEND_COMMIT=8f262c7ba8b0da077157f2e937c7e41c9472bdc2
+RUN git clone $GANTREE_FRONTEND_REPO /frontend
+RUN git -C /frontend checkout $GANTREE_FRONTEND_COMMIT
 RUN yarn --cwd /frontend
 RUN yarn --cwd /frontend build
 

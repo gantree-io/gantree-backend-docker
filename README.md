@@ -1,6 +1,6 @@
-# Gantree-Backend-Docker #
+# Gantree-Backend-Docker (+ Web Application) #
 
-This docker container is designed to simplify the setup and usage of the gantree backend
+This docker container is designed to simplify the setup and usage of the Gantree Web Application
 
 ## Setup
 
@@ -8,10 +8,10 @@ This docker container is designed to simplify the setup and usage of the gantree
 
 For information on setting up docker see [docs.docker.com/install](https://docs.docker.com/install)
 
-### Accounts
+### Required Accounts
 
-- Firebase (not via Google Cloud Platform)
-- Email server
+- Firebase (via [Firebase Console](https://console.firebase.google.com/), not via Google Cloud Platform)
+- Email server ([ethereal.email](https://ethereal.email/) is good for testing)
 
 See the env files below for the required configurations and where to put them
 
@@ -33,7 +33,7 @@ Note: If you change the env files you'll need to rerun this step
 
 ### Run With Docker-Compose
 
-We provider the USER_ID here to setup permissions on any mapped folders
+We provide the `USER_ID` here to setup permissions on any mapped folders
 
 ```bash
 USER_ID=$(id -u) docker-compose up
